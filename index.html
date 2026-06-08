@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -14,85 +13,91 @@
         
         <form id="stemForm" class="bg-gray-900 p-6 rounded-xl border border-gray-800 mb-8">
             <div class="grid grid-cols-2 gap-4 mb-4">
-                <input type="text" id="artistName" placeholder="Artist Name" required class="bg-gray-800 p-2 rounded border border-gray-700 w-full text-white">
-                <input type="text" id="trackTitle" placeholder="Track Title" required class="bg-gray-800 p-2 rounded border border-gray-700 w-full text-white">
+                <input type="text" name="artistName" id="artistName" placeholder="Artist Name" required class="bg-gray-800 p-2 rounded border border-gray-700 w-full text-white">
+                <input type="text" name="trackTitle" id="trackTitle" placeholder="Track Title" required class="bg-gray-800 p-2 rounded border border-gray-700 w-full text-white">
             </div>
             <div class="mb-4">
-                <input type="file" id="stemFile" accept=".mp3,.wav,.zip" required class="w-full text-gray-400">
+                <input type="file" name="file" id="stemFile" accept=".mp3,.wav,.zip" required class="w-full text-gray-400">
             </div>
-            <button type="submit" id="submitBtn" class="bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-2 px-4 rounded w-full">Upload Stem Pack</button>
+            <button type="submit" id="submitBtn" class="bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-2 px-4 rounded w-full disabled:opacity-50">Upload Stem Pack</button>
         </form>
 
         <div id="marketplaceList" class="space-y-4"></div>
     </div>
 
     <script>
-        // Jouw laatste Google Web App URL
-        const API_URL = "https://script.google.com/macros/s/AKfycbyC79gILhTfdwRmUT-DXQpQ3-0w7kW3iTrK-CVB4da3L6OtTS5oVjT_MqLW7HiAlHmb/exec";
+        // VERVANG DEZE URL MET JOUW EIGEN NIEUWE /exec URL VAN DE NIEUWE IMPLEMENTATIE!
+        const API_URL = "https://script.google.com/macros/s/AKfycbyg1QHvrdc8IkBNKB9Xc_0ju2mRekl3fDUbB7WfcX4uwtqe1taNr_AQqmAG5NvCi0Di/exec";
 
         document.getElementById('stemForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('submitBtn');
-            const fileInput = document.getElementById('stemFile');
-            
-            btn.innerText = "Uploading...";
+            btn.innerText = "Bezig met uploaden... Even geduld...";
             btn.disabled = true;
-            
-            const file = fileInput.files[0];
-            const reader = new FileReader();
-            
-            reader.onload = async (event) => {
-                const payload = {
-                    artistName: document.getElementById('artistName').value,
-                    trackTitle: document.getElementById('trackTitle').value,
-                    bpmKey: "N/A",
-                    stemType: "Pack",
-                    lookingFor: "Collaboration",
-                    fileData: event.target.result,
-                    fileName: file.name
-                };
 
-                try {
-                    const response = await fetch(API_URL, {
-                        method: 'POST',
-                        mode: 'cors',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
-                    
-                    const result = await response.json();
-                    
-                    if(result.status === "success") {
-                        alert("Succes! Data verzonden.");
-                        location.reload();
-                    } else {
-                        alert("Server error: " + result.message);
-                    }
-                } catch (err) {
-                    alert("Fout bij verbinden: " + err);
-                    console.error(err);
-                } finally {
+            // We bouwen een native FormData object op. Dit converteert niks naar Base64, maar stuurt het bestand puur door.
+            const formData = new FormData();
+            formData.append("artistName", document.getElementById('artistName').value);
+            formData.append("trackTitle", document.getElementById('trackTitle').value);
+            formData.append("bpmKey", "N/A");
+            formData.append("stemType", "Pack");
+            formData.append("lookingFor", "Collaboration");
+            formData.append("file", document.getElementById('stemFile').files[0]);
+
+            try {
+                // We sturen de FormData direct op via POST
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    mode: 'cors',
+                    body: formData // Geen JSON.stringify!
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === "success") {
+                    alert("Succes! Je stem pack is succesvol geüpload naar Google Drive en toegevoegd aan de lijst.");
+                    location.reload();
+                } else {
+                    alert("Server Foutmelding: " + result.message);
                     btn.innerText = "Upload Stem Pack";
                     btn.disabled = false;
                 }
-            };
-            reader.readAsDataURL(file);
+            } catch (err) {
+                // Mocht er NU nog een fetch error komen, dan ligt het aan de netwerk/machtigingen, niet aan de code.
+                alert("Verbindingsfout (Fetch Error): " + err);
+                console.error(err);
+                btn.innerText = "Upload Stem Pack";
+                btn.disabled = false;
+            }
         });
 
+        // Functie om de bestaande stems in te laden op de pagina
         async function loadStems() {
             try {
                 const res = await fetch(API_URL);
                 const data = await res.json();
                 const list = document.getElementById('marketplaceList');
+                
+                if (data.length === 0 || data.status === "error") {
+                    list.innerHTML = "<p class='text-gray-500 italic'>Nog geen stems geüpload of tabel is leeg.</p>";
+                    return;
+                }
+
                 list.innerHTML = data.map(item => `
-                    <div class="bg-gray-800 p-4 rounded border border-gray-700 flex justify-between">
-                        <div><h3 class="font-bold">${item.trackTitle}</h3><p class="text-sm text-cyan-400">${item.artistName}</p></div>
-                        <a href="${item.downloadUrl}" target="_blank" class="text-cyan-400">Download</a>
+                    <div class="bg-gray-800 p-4 rounded border border-gray-700 flex justify-between items-center">
+                        <div>
+                            <h3 class="font-bold text-white">${item["Track Title"] || item.trackTitle || "Naamloos"}</h3>
+                            <p class="text-sm text-cyan-400">${item["Artist Name"] || item.artistName || "Onbekend"}</p>
+                        </div>
+                        <a href="${item["De échte Google Drive Download URL"] || item.downloadUrl}" target="_blank" class="bg-cyan-700 hover:bg-cyan-600 text-white text-xs px-3 py-2 rounded font-medium">Download</a>
                     </div>
                 `).join('');
-            } catch(e) { console.error("Kon stems niet laden:", e); }
+            } catch(e) { 
+                console.error("Kon de stems marketplace lijst niet inladen:", e); 
+            }
         }
         
+        // Start het laden van de stems bij het openen van de pagina
         loadStems();
     </script>
 </body>
