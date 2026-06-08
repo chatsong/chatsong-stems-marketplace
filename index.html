@@ -41,7 +41,7 @@
     </div>
 
     <script>
-        const BASE_URL = "https://script.google.com/macros/s/AKfycbzBqUongeZRM_0iZ74RwpC6Itg7VbO0-kZCfse2H2U/dev";
+        const BASE_URL = "https://script.google.com/macros/s/AKfycbxVZtH63-xexO7SQLhz0vv1Mv53oaEL7TDDO_pD5MKlK4YjKCSImr6UlYvndb6I8Ov5/exec";
         
         function loadStems() {
             const list = document.getElementById('marketplaceList');
@@ -64,9 +64,10 @@
                 }
 
                 list.innerHTML = data.map(item => {
-                    const title = item["Track Title"] || item.trackTitle || "Naamloos";
-                    const artist = item["Artist Name"] || item.artistName || "Onbekend";
-                    const url = item["De échte Google Drive Download URL"] || item.downloadUrl || "#";
+                    // JUISTE kolomnamen uit jouw spreadsheet:
+                    const title = item.Tracktitle || "Naamloos";
+                    const artist = item.artistName || "Onbekend";
+                    const url = item.downloadUrl || "#";
 
                     return `
                         <div class="bg-gray-800 p-4 rounded border border-gray-700 flex justify-between items-center">
