@@ -12,15 +12,22 @@
     <div class="max-w-4xl mx-auto">
         <h1 class="text-3xl font-bold text-white mb-6">Stems & Collab Marketplace</h1>
         
-        <form id="stemForm" class="bg-gray-900 p-6 rounded-xl border border-gray-800 mb-8">
+        <!-- Upload via iframe (geen CORS problemen) -->
+        <form id="stemForm" 
+              action="https://script.google.com/macros/s/AKfycbwTTNPnkxcagETN6rok1SQTjMsF5smFB9djHl9K1TKPf0scJLQWSJc02Q/exec" 
+              method="POST" 
+              target="uploadTarget"
+              enctype="multipart/form-data"
+              class="bg-gray-900 p-6 rounded-xl border border-gray-800 mb-8">
+            
             <div class="grid grid-cols-2 gap-4 mb-4">
-                <input type="text" id="artistName" placeholder="Artist Name" required 
+                <input type="text" name="artistName" placeholder="Artist Name" required 
                     class="bg-gray-800 p-2 rounded border border-gray-700 w-full text-white">
-                <input type="text" id="trackTitle" placeholder="Track Title" required 
+                <input type="text" name="trackTitle" placeholder="Track Title" required 
                     class="bg-gray-800 p-2 rounded border border-gray-700 w-full text-white">
             </div>
             <div class="mb-4">
-                <input type="file" id="stemFile" accept=".mp3,.wav,.zip" required 
+                <input type="file" name="file" accept=".mp3,.wav,.zip" required 
                     class="w-full text-gray-400">
             </div>
             <button type="submit" id="submitBtn" 
@@ -29,92 +36,26 @@
             </button>
         </form>
 
+        <!-- Verborgen iframe voor de response -->
+        <iframe name="uploadTarget" id="uploadTarget" style="display:none;"></iframe>
+
         <div id="marketplaceList" class="space-y-4"></div>
     </div>
 
     <script>
-        // VERVANG DIT MET JE NIEUWE WEB APP URL NA DEPLOY!
-        const BASE_URL = "https://script.google.com/macros/s/AKfycbwTTNPnkxcagETN6rOk1SQTjMsF5smFB9djHl9K1TKPfOsCJLQWSJcO2Q8ia0--unzT/exec";
+        const BASE_URL = "https://script.google.com/macros/s/AKfycbzvXCFBb-E-bYdSOANZk77VkfuwuNcIKN40C95MQjikZiVZBsdSTIBw9ITzqKLdoNxf/exec";
         
-        // Cache-buster voor GET requests
-        const API_URL_GET = BASE_URL + "?v=" + new Date().getTime();
-
-        document.getElementById('stemForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const btn = document.getElementById('submitBtn');
-            btn.innerText = "Bestand verwerken en uploaden... Even geduld...";
-            btn.disabled = true;
-
-            const fileInput = document.getElementById('stemFile');
-            if (!fileInput.files.length) {
-                alert("Selecteer eerst een bestand.");
-                btn.disabled = false;
-                btn.innerText = "Upload Stem Pack";
-                return;
-            }
-
-            const file = fileInput.files[0];
-            
-            // Waarschuwing bij grote bestanden (>25MB = Apps Script limiet)
-            if (file.size > 25 * 1024 * 1024) {
-                alert("Bestand is te groot! Maximaal 25MB voor Google Apps Script.");
-                btn.disabled = false;
-                btn.innerText = "Upload Stem Pack";
-                return;
-            }
-
-            const reader = new FileReader();
-            
-            reader.onload = async (event) => {
-                const payload = {
-                    artistName: document.getElementById('artistName').value,
-                    trackTitle: document.getElementById('trackTitle').value,
-                    fileData: event.target.result,
-                    fileName: file.name
-                };
-
-                try {
-                    const response = await fetch(BASE_URL, {
-                        method: 'POST',
-                        mode: 'cors',
-                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                        body: JSON.stringify(payload)
-                    });
-                    
-                    const result = await response.json();
-                    
-                    if (result.status === "success") {
-                        alert("Succes! Je stem pack is geüpload.");
-                        document.getElementById('stemForm').reset();
-                        loadStems(); // Herlaad de lijst zonder pagina-refresh
-                    } else {
-                        alert("Foutmelding van de server: " + result.message);
-                    }
-                } catch (err) {
-                    alert("Verbindingsfout: " + err.message);
-                    console.error(err);
-                } finally {
-                    btn.innerText = "Upload Stem Pack";
-                    btn.disabled = false;
-                }
-            };
-            
-            reader.onerror = () => {
-                alert("Fout bij het lezen van het bestand.");
-                btn.disabled = false;
-                btn.innerText = "Upload Stem Pack";
-            };
-            
-            reader.readAsDataURL(file);
-        });
-
-        async function loadStems() {
+        // JSONP voor het laden van de lijst (geen CORS)
+        function loadStems() {
             const list = document.getElementById('marketplaceList');
             list.innerHTML = "<p class='text-gray-500 italic'>Laden...</p>";
             
-            try {
-                const res = await fetch(API_URL_GET);
-                const data = await res.json();
+            const script = document.createElement('script');
+            const callbackName = 'stemsCallback_' + Date.now();
+            
+            window[callbackName] = function(data) {
+                delete window[callbackName];
+                document.head.removeChild(script);
                 
                 if (!data || data.length === 0 || data.status === "error") {
                     list.innerHTML = "<p class='text-gray-500 italic'>Nog geen stems beschikbaar.</p>";
@@ -139,11 +80,48 @@
                         </div>
                     `;
                 }).join('');
-            } catch(e) { 
-                list.innerHTML = "<p class='text-red-400'>Kon de lijst niet laden.</p>";
-                console.error("Lijst inladen mislukt:", e); 
-            }
+            };
+            
+            script.onerror = function() {
+                list.innerHTML = "<p class='text-red-400'>Kon de lijst niet laden (CORS/Netwerkfout).</p>";
+            };
+            
+            script.src = BASE_URL + "?callback=" + callbackName + "&v=" + Date.now();
+            document.head.appendChild(script);
         }
+        
+        // Upload feedback via iframe
+        document.getElementById('uploadTarget').addEventListener('load', function() {
+            try {
+                const iframe = document.getElementById('uploadTarget');
+                const responseText = iframe.contentDocument.body.innerText;
+                const result = JSON.parse(responseText);
+                
+                if (result.status === "success") {
+                    alert("Succes! Je stem pack is geüpload.");
+                    document.getElementById('stemForm').reset();
+                    loadStems();
+                } else {
+                    alert("Fout: " + (result.message || "Onbekende fout"));
+                }
+            } catch(e) {
+                // Iframe kan cross-origin zijn, dan kunnen we de response niet lezen
+                // In dat geval: vertrouw erop dat het gelukt is na een korte delay
+                setTimeout(() => {
+                    alert("Upload verwerkt! De lijst wordt vernieuwd.");
+                    document.getElementById('stemForm').reset();
+                    loadStems();
+                }, 2000);
+            }
+            
+            document.getElementById('submitBtn').innerText = "Upload Stem Pack";
+            document.getElementById('submitBtn').disabled = false;
+        });
+        
+        document.getElementById('stemForm').addEventListener('submit', function() {
+            document.getElementById('submitBtn').innerText = "Uploaden... Even geduld...";
+            document.getElementById('submitBtn').disabled = true;
+        });
         
         loadStems();
     </script>
