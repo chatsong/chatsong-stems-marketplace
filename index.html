@@ -12,9 +12,8 @@
     <div class="max-w-4xl mx-auto">
         <h1 class="text-3xl font-bold text-white mb-6">Stems & Collab Marketplace</h1>
         
-        <!-- Upload via iframe (geen CORS problemen) -->
         <form id="stemForm" 
-              action="https://script.google.com/macros/s/AKfycbwTTNPnkxcagETN6rok1SQTjMsF5smFB9djHl9K1TKPf0scJLQWSJc02Q/exec" 
+              action="https://script.google.com/macros/s/AKfycbzBqUongeZRM_0iZ74RwpC6Itg7VbO0-kZCfse2H2U/exec" 
               method="POST" 
               target="uploadTarget"
               enctype="multipart/form-data"
@@ -36,29 +35,31 @@
             </button>
         </form>
 
-        <!-- Verborgen iframe voor de response -->
         <iframe name="uploadTarget" id="uploadTarget" style="display:none;"></iframe>
 
         <div id="marketplaceList" class="space-y-4"></div>
     </div>
 
     <script>
-        const BASE_URL = "https://script.google.com/macros/s/AKfycbzvXCFBb-E-bYdSOANZk77VkfuwuNcIKN40C95MQjikZiVZBsdSTIBw9ITzqKLdoNxf/exec";
+        const BASE_URL = "https://script.google.com/macros/s/AKfycbzBqUongeZRM_0iZ74RwpC6Itg7VbO0-kZCfse2H2U/dev";
         
-        // JSONP voor het laden van de lijst (geen CORS)
         function loadStems() {
             const list = document.getElementById('marketplaceList');
             list.innerHTML = "<p class='text-gray-500 italic'>Laden...</p>";
             
             const script = document.createElement('script');
-            const callbackName = 'stemsCallback_' + Date.now();
+            const callbackName = 'cb' + Date.now();
             
             window[callbackName] = function(data) {
                 delete window[callbackName];
-                document.head.removeChild(script);
+                if (script.parentNode) script.parentNode.removeChild(script);
                 
-                if (!data || data.length === 0 || data.status === "error") {
+                if (!data || data.length === 0) {
                     list.innerHTML = "<p class='text-gray-500 italic'>Nog geen stems beschikbaar.</p>";
+                    return;
+                }
+                if (data.status === "error") {
+                    list.innerHTML = "<p class='text-red-400'>Fout: " + data.message + "</p>";
                     return;
                 }
 
@@ -83,36 +84,19 @@
             };
             
             script.onerror = function() {
-                list.innerHTML = "<p class='text-red-400'>Kon de lijst niet laden (CORS/Netwerkfout).</p>";
+                list.innerHTML = "<p class='text-red-400'>Kon de lijst niet laden.</p>";
             };
             
             script.src = BASE_URL + "?callback=" + callbackName + "&v=" + Date.now();
             document.head.appendChild(script);
         }
         
-        // Upload feedback via iframe
         document.getElementById('uploadTarget').addEventListener('load', function() {
-            try {
-                const iframe = document.getElementById('uploadTarget');
-                const responseText = iframe.contentDocument.body.innerText;
-                const result = JSON.parse(responseText);
-                
-                if (result.status === "success") {
-                    alert("Succes! Je stem pack is geüpload.");
-                    document.getElementById('stemForm').reset();
-                    loadStems();
-                } else {
-                    alert("Fout: " + (result.message || "Onbekende fout"));
-                }
-            } catch(e) {
-                // Iframe kan cross-origin zijn, dan kunnen we de response niet lezen
-                // In dat geval: vertrouw erop dat het gelukt is na een korte delay
-                setTimeout(() => {
-                    alert("Upload verwerkt! De lijst wordt vernieuwd.");
-                    document.getElementById('stemForm').reset();
-                    loadStems();
-                }, 2000);
-            }
+            setTimeout(() => {
+                alert("Upload verwerkt! De lijst wordt vernieuwd.");
+                document.getElementById('stemForm').reset();
+                loadStems();
+            }, 1500);
             
             document.getElementById('submitBtn').innerText = "Upload Stem Pack";
             document.getElementById('submitBtn').disabled = false;
