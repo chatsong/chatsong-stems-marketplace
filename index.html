@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -13,24 +14,30 @@
         
         <form id="stemForm" class="bg-gray-900 p-6 rounded-xl border border-gray-800 mb-8">
             <div class="grid grid-cols-2 gap-4 mb-4">
-                <input type="text" id="artistName" placeholder="Artist Name" required class="bg-gray-800 p-2 rounded border border-gray-700 w-full text-white">
-                <input type="text" id="trackTitle" placeholder="Track Title" required class="bg-gray-800 p-2 rounded border border-gray-700 w-full text-white">
+                <input type="text" id="artistName" placeholder="Artist Name" required 
+                    class="bg-gray-800 p-2 rounded border border-gray-700 w-full text-white">
+                <input type="text" id="trackTitle" placeholder="Track Title" required 
+                    class="bg-gray-800 p-2 rounded border border-gray-700 w-full text-white">
             </div>
             <div class="mb-4">
-                <input type="file" id="stemFile" accept=".mp3,.wav,.zip" required class="w-full text-gray-400">
+                <input type="file" id="stemFile" accept=".mp3,.wav,.zip" required 
+                    class="w-full text-gray-400">
             </div>
-            <button type="submit" id="submitBtn" class="bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-2 px-4 rounded w-full disabled:opacity-50">Upload Stem Pack</button>
+            <button type="submit" id="submitBtn" 
+                class="bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-2 px-4 rounded w-full disabled:opacity-50">
+                Upload Stem Pack
+            </button>
         </form>
 
         <div id="marketplaceList" class="space-y-4"></div>
     </div>
 
     <script>
-        // Jouw geverifieerde Google Web App URL:
-        const BASE_URL = "https://script.google.com/macros/s/AKfycbzjSaIWd4ZJb-d0znoNJ2Y--mdT7AjD7cDKWHPIPoUWbq3vCDuc8ktBUEJFqLowEzO8/exec";
+        // VERVANG DIT MET JE NIEUWE WEB APP URL NA DEPLOY!
+        const BASE_URL = "https://script.google.com/macros/s/AKfycbwTTNPnkxcagETN6rOk1SQTjMsF5smFB9djHl9K1TKPfOsCJLQWSJcO2Q8ia0--unzT/exec";
         
-        // Geforceerde cache-buster tegen hardnekkige browser/mobiele cache
-        const API_URL = BASE_URL + "?v=" + new Date().getTime();
+        // Cache-buster voor GET requests
+        const API_URL_GET = BASE_URL + "?v=" + new Date().getTime();
 
         document.getElementById('stemForm').addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -42,57 +49,74 @@
             if (!fileInput.files.length) {
                 alert("Selecteer eerst een bestand.");
                 btn.disabled = false;
+                btn.innerText = "Upload Stem Pack";
                 return;
             }
 
             const file = fileInput.files[0];
+            
+            // Waarschuwing bij grote bestanden (>25MB = Apps Script limiet)
+            if (file.size > 25 * 1024 * 1024) {
+                alert("Bestand is te groot! Maximaal 25MB voor Google Apps Script.");
+                btn.disabled = false;
+                btn.innerText = "Upload Stem Pack";
+                return;
+            }
+
             const reader = new FileReader();
             
             reader.onload = async (event) => {
-                // We bouwen een schone JSON payload die Google Apps Script wél begrijpt
                 const payload = {
                     artistName: document.getElementById('artistName').value,
                     trackTitle: document.getElementById('trackTitle').value,
-                    fileData: event.target.result, // Base64 Data URL string
+                    fileData: event.target.result,
                     fileName: file.name
                 };
 
                 try {
-                    const response = await fetch(API_URL, {
+                    const response = await fetch(BASE_URL, {
                         method: 'POST',
                         mode: 'cors',
-                        headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // Voorkomt preflight problemen bij platte tekst
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                         body: JSON.stringify(payload)
                     });
                     
                     const result = await response.json();
                     
                     if (result.status === "success") {
-                        alert("Succes! Je stem pack is succesvol geüpload naar Google Drive.");
-                        location.reload();
+                        alert("Succes! Je stem pack is geüpload.");
+                        document.getElementById('stemForm').reset();
+                        loadStems(); // Herlaad de lijst zonder pagina-refresh
                     } else {
                         alert("Foutmelding van de server: " + result.message);
-                        btn.innerText = "Upload Stem Pack";
-                        btn.disabled = false;
                     }
                 } catch (err) {
-                    alert("Verbindingsfout (Fetch Error): " + err);
+                    alert("Verbindingsfout: " + err.message);
                     console.error(err);
+                } finally {
                     btn.innerText = "Upload Stem Pack";
                     btn.disabled = false;
                 }
+            };
+            
+            reader.onerror = () => {
+                alert("Fout bij het lezen van het bestand.");
+                btn.disabled = false;
+                btn.innerText = "Upload Stem Pack";
             };
             
             reader.readAsDataURL(file);
         });
 
         async function loadStems() {
+            const list = document.getElementById('marketplaceList');
+            list.innerHTML = "<p class='text-gray-500 italic'>Laden...</p>";
+            
             try {
-                const res = await fetch(API_URL);
+                const res = await fetch(API_URL_GET);
                 const data = await res.json();
-                const list = document.getElementById('marketplaceList');
                 
-                if(!data || data.length === 0 || data.status === "error") {
+                if (!data || data.length === 0 || data.status === "error") {
                     list.innerHTML = "<p class='text-gray-500 italic'>Nog geen stems beschikbaar.</p>";
                     return;
                 }
@@ -108,11 +132,15 @@
                                 <h3 class="font-bold text-white">${title}</h3>
                                 <p class="text-sm text-cyan-400">${artist}</p>
                             </div>
-                            <a href="${url}" target="_blank" class="bg-cyan-700 hover:bg-cyan-600 text-white text-xs px-3 py-2 rounded">Download</a>
+                            <a href="${url}" target="_blank" 
+                                class="bg-cyan-700 hover:bg-cyan-600 text-white text-xs px-3 py-2 rounded">
+                                Download
+                            </a>
                         </div>
                     `;
                 }).join('');
             } catch(e) { 
+                list.innerHTML = "<p class='text-red-400'>Kon de lijst niet laden.</p>";
                 console.error("Lijst inladen mislukt:", e); 
             }
         }
