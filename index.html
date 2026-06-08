@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -17,7 +18,7 @@
                 <input type="text" id="trackTitle" placeholder="Track Title" required class="bg-gray-800 p-2 rounded border border-gray-700 w-full text-white">
             </div>
             <div class="mb-4">
-                <input type="file" id="stemFile" accept=".mp3,.wav,.zip" class="w-full text-gray-400">
+                <input type="file" id="stemFile" accept=".mp3,.wav,.zip" required class="w-full text-gray-400">
             </div>
             <button type="submit" id="submitBtn" class="bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-2 px-4 rounded w-full">Upload Stem Pack</button>
         </form>
@@ -26,15 +27,18 @@
     </div>
 
     <script>
-        // PLAATS HIER JE GOOGLE SCRIPT URL:
+        // Jouw laatste Google Web App URL
         const API_URL = "https://script.google.com/macros/s/AKfycbzLZFrxn_TyxGWK4whdXix3a2raedsfkcJD60HI8xojgwM-wI0CwJqJGdsJsRq9t__h/exec";
 
         document.getElementById('stemForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('submitBtn');
-            btn.innerText = "Uploading...";
+            const fileInput = document.getElementById('stemFile');
             
-            const file = document.getElementById('stemFile').files[0];
+            btn.innerText = "Uploading...";
+            btn.disabled = true;
+            
+            const file = fileInput.files[0];
             const reader = new FileReader();
             
             reader.onload = async (event) => {
@@ -55,13 +59,21 @@
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(payload)
                     });
+                    
                     const result = await response.json();
+                    
                     if(result.status === "success") {
                         alert("Succes! Data verzonden.");
                         location.reload();
+                    } else {
+                        alert("Server error: " + result.message);
                     }
                 } catch (err) {
-                    alert("Fout: " + err);
+                    alert("Fout bij verbinden: " + err);
+                    console.error(err);
+                } finally {
+                    btn.innerText = "Upload Stem Pack";
+                    btn.disabled = false;
                 }
             };
             reader.readAsDataURL(file);
@@ -78,8 +90,9 @@
                         <a href="${item.downloadUrl}" target="_blank" class="text-cyan-400">Download</a>
                     </div>
                 `).join('');
-            } catch(e) { console.error(e); }
+            } catch(e) { console.error("Kon stems niet laden:", e); }
         }
+        
         loadStems();
     </script>
 </body>
