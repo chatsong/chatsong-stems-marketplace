@@ -102,8 +102,8 @@
     </div>
 
     <script>
-        // Jouw NIEUWE Google Apps Script URL staat hier nu ingevuld:
-        const API_URL = "https://script.google.com/macros/s/AKfycbw_NTjdr60Kk23-_xdHx9pSYUwuJ7pl4f-xf5FcG_EGg_8kCw2XxQY6ZVi6dweV0z4i/exec";
+        // Jouw ALLERNIEUWSTE Google Apps Script URL staat hier nu ingevuld:
+        const API_URL = "https://script.google.com/macros/s/AKfycbws43udlpQkXadCExYxuXnkEuXkCgVroTavkXI2sQYScJA9G1pYWl1LS_u4yOLxWxrW/exec";
         
         let shareMethod = "upload"; // Kan "upload" of "link" zijn
 
@@ -231,7 +231,6 @@
                     payload.fileData = await toBase64(file);
                     payload.fileName = file.name;
                 } else {
-                    // Als het een link is, sturen we direct de link door
                     payload.externalUrl = linkInput.value;
                 }
 
@@ -243,7 +242,6 @@
                 });
 
                 document.getElementById('stemForm').reset();
-                // Reset naar upload view
                 btnUpload.click();
                 
                 alert("Boom! Your track has been uploaded and added to the marketplace!");
