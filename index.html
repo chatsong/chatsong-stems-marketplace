@@ -1,86 +1,193 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="nl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stems Marketplace</title>
+    <title>Stems & Collab Marketplace</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>body { background-color: #0d1117; color: #c9d1d9; }</style>
+    <style>
+        body { background-color: #0d1117; color: #c9d1d9; font-family: system-ui, sans-serif; }
+        .stem-card { transition: all 0.2s; }
+        .stem-card:hover { border-color: #0891b2; }
+    </style>
 </head>
-<body class="p-6">
+<body class="p-6 min-h-screen">
     <div class="max-w-4xl mx-auto">
-        <h1 class="text-3xl font-bold text-white mb-6">Stems & Collab Marketplace</h1>
         
-        <form id="stemForm" action="https://script.google.com/macros/s/AKfycbzxgf4NXhLeQmVm8bgychdwJMJH9ron_S81z2WbCdXs8ns0WsiPtOnH2JRmD1SUGsFp/exec" method="POST" target="uploadTarget" enctype="multipart/form-data" class="bg-gray-900 p-6 rounded-xl border border-gray-800 mb-8">
-            <div class="grid grid-cols-2 gap-4 mb-4">
-                <input type="text" name="artistName" placeholder="Artist Name" required class="bg-gray-800 p-2 rounded border border-gray-700 w-full text-white">
-                <input type="text" name="trackTitle" placeholder="Track Title" required class="bg-gray-800 p-2 rounded border border-gray-700 w-full text-white">
-            </div>
-            <div class="mb-4">
-                <input type="file" name="file" accept=".mp3,.wav,.zip" required class="w-full text-gray-400">
-            </div>
-            <button type="submit" id="submitBtn" class="bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-2 px-4 rounded w-full disabled:opacity-50">Upload Stem Pack</button>
-        </form>
+        <!-- Header -->
+        <div class="mb-8 text-center">
+            <h1 class="text-4xl font-bold text-white mb-2">🎵 Stems & Collab Marketplace</h1>
+            <p class="text-gray-400">Deel je stems, vocals en beats. Vind collabs.</p>
+        </div>
 
-        <iframe name="uploadTarget" id="uploadTarget" style="display:none;"></iframe>
-        <div id="marketplaceList" class="space-y-4"></div>
+        <!-- Upload Form -->
+        <div class="bg-gray-900 p-6 rounded-xl border border-gray-800 mb-8">
+            <h2 class="text-xl font-semibold text-white mb-4">📤 Upload je Stem Pack</h2>
+            
+            <form id="stemForm" 
+                  action="https://script.google.com/macros/s/AKfycbylhZOte16hD3a-nlwQ2JQBJl5X2ITW4Dc4xUx4WtfUsoUoLRbciQ5vHyzoi_pxzDXj/exec" 
+                  method="POST" 
+                  target="uploadFrame"
+                  enctype="multipart/form-data">
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <input type="text" name="artistName" placeholder="Jouw artiestennaam" required
+                        class="bg-gray-800 p-3 rounded-lg border border-gray-700 text-white placeholder-gray-500 focus:border-cyan-500 focus:outline-none">
+                    <input type="text" name="trackTitle" placeholder="Track titel" required
+                        class="bg-gray-800 p-3 rounded-lg border border-gray-700 text-white placeholder-gray-500 focus:border-cyan-500 focus:outline-none">
+                </div>
+                
+                <div class="mb-4">
+                    <input type="file" name="file" accept=".mp3,.wav,.zip,.rar" required
+                        class="w-full text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-cyan-700 file:text-white hover:file:bg-cyan-600">
+                    <p class="text-xs text-gray-500 mt-1">Max 25MB. .zip voor meerdere stems.</p>
+                </div>
+                
+                <button type="submit" id="submitBtn"
+                    class="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-3 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                    Upload Stem Pack
+                </button>
+            </form>
+            
+            <!-- Hidden iframe voor form response -->
+            <iframe name="uploadFrame" id="uploadFrame" style="display:none;"></iframe>
+            
+            <!-- Upload status -->
+            <div id="uploadStatus" class="mt-4 hidden"></div>
+        </div>
+
+        <!-- Marketplace Lijst -->
+        <div class="bg-gray-900 p-6 rounded-xl border border-gray-800">
+            <h2 class="text-xl font-semibold text-white mb-4">🔥 Beschikbare Stems</h2>
+            <div id="marketplaceList" class="space-y-3">
+                <p class="text-gray-500 italic">Laden...</p>
+            </div>
+        </div>
+
     </div>
 
     <script>
-        const BASE_URL = "https://script.google.com/macros/s/AKfycbzxgf4NXhLeQmVm8bgychdwJMJH9ron_S81z2WbCdXs8ns0WsiPtOnH2JRmD1SUGsFp/exec";
+        // ⚠️ VERVANG DIT MET JE EIGEN APPS SCRIPT URL
+        const API_URL = "https://script.google.com/macros/s/AKfycbylhZOte16hD3a-nlwQ2JQBJl5X2ITW4Dc4xUx4WtfUsoUoLRbciQ5vHyzoi_pxzDXj/exec";
         
+        // === LIJST LADEN (JSONP) ===
         function loadStems() {
             const list = document.getElementById('marketplaceList');
-            list.innerHTML = "<p class='text-gray-500 italic'>Laden...</p>";
+            list.innerHTML = '<p class="text-gray-500 italic">Laden...</p>';
             
+            // JSONP: script tag injectie (geen CORS!)
             const script = document.createElement('script');
-            const cb = 'cb' + Date.now();
+            const cbName = 'stems_' + Date.now();
             
-            window[cb] = function(data) {
-                delete window[cb];
+            window[cbName] = function(data) {
+                // Cleanup
+                delete window[cbName];
                 if (script.parentNode) script.parentNode.removeChild(script);
                 
-                if (!data || !data.length) {
-                    list.innerHTML = "<p class='text-gray-500 italic'>Nog geen stems beschikbaar.</p>";
+                // Error check
+                if (!data || data.status === "error") {
+                    list.innerHTML = '<p class="text-red-400">Fout: ' + (data?.message || "Onbekend") + '</p>';
                     return;
                 }
                 
-                list.innerHTML = data.map(item => {
-                    const title = item.Tracktitle || "Naamloos";
-                    const artist = item.artistName || "Onbekend";
-                    const url = item.downloadUrl || "";
-                    const hasFile = url.includes("drive.google.com");
+                // Lege lijst
+                if (!Array.isArray(data) || data.length === 0) {
+                    list.innerHTML = '<p class="text-gray-500 italic">Nog geen stems geüpload. Wees de eerste!</p>';
+                    return;
+                }
+                
+                // Render stems
+                list.innerHTML = data.map((item, index) => {
+                    // Haal velden op (check verschillende mogelijke namen)
+                    const title = item.Tracktitle || item.trackTitle || item["Track Title"] || "Naamloos";
+                    const artist = item.artistName || item["Artist Name"] || "Onbekend";
+                    const url = item.downloadUrl || item.downloadurl || item["downloadUrl"] || "";
+                    const type = item.stemType || item.stemtype || "Pack";
+                    const looking = item.lookingFor || item.lookingfor || "Collaboration";
                     
-                    return `<div class="bg-gray-800 p-4 rounded border border-gray-700 flex justify-between items-center">
-                        <div>
-                            <h3 class="font-bold text-white">${title}</h3>
-                            <p class="text-sm text-cyan-400">${artist}</p>
+                    // Check of er een echte download URL is
+                    const hasDownload = url && url.includes("drive.google.com") && url.includes("id=");
+                    
+                    return `
+                        <div class="stem-card bg-gray-800 p-4 rounded-lg border border-gray-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                            <div class="flex-1">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <span class="text-xs bg-cyan-900 text-cyan-300 px-2 py-0.5 rounded">${type}</span>
+                                    <span class="text-xs bg-purple-900 text-purple-300 px-2 py-0.5 rounded">${looking}</span>
+                                </div>
+                                <h3 class="font-bold text-white text-lg">${title}</h3>
+                                <p class="text-cyan-400 text-sm">👤 ${artist}</p>
+                            </div>
+                            
+                            <div class="flex gap-2">
+                                ${hasDownload ? `
+                                    <a href="${url}" target="_blank" 
+                                       class="bg-cyan-600 hover:bg-cyan-500 text-white text-sm px-4 py-2 rounded-lg font-medium transition-colors">
+                                        ⬇️ Download
+                                    </a>
+                                ` : `
+                                    <span class="text-gray-500 text-sm px-4 py-2">Geen bestand</span>
+                                `}
+                            </div>
                         </div>
-                        ${hasFile ? `<a href="${url}" target="_blank" class="bg-cyan-700 hover:bg-cyan-600 text-white text-xs px-3 py-2 rounded">Download</a>` : `<span class="text-gray-500 text-xs">Geen bestand</span>`}
-                    </div>`;
+                    `;
                 }).join('');
             };
             
-            script.onerror = () => list.innerHTML = "<p class='text-red-400'>Kon niet laden.</p>";
-            script.src = BASE_URL + "?callback=" + cb + "&v=" + Date.now();
+            // Error handling
+            script.onerror = function() {
+                list.innerHTML = '<p class="text-red-400">Kon niet verbinden met server. Probeer later opnieuw.</p>';
+            };
+            
+            // Cache-buster toevoegen
+            script.src = API_URL + "?callback=" + cbName + "&_=" + Date.now();
             document.head.appendChild(script);
         }
         
-        document.getElementById('uploadTarget').addEventListener('load', () => {
-            setTimeout(() => {
-                alert("Upload gelukt!");
-                document.getElementById('stemForm').reset();
-                loadStems();
-            }, 1000);
-            document.getElementById('submitBtn').innerText = "Upload Stem Pack";
-            document.getElementById('submitBtn').disabled = false;
+        // === UPLOAD HANDLING ===
+        const form = document.getElementById('stemForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const statusDiv = document.getElementById('uploadStatus');
+        const iframe = document.getElementById('uploadFrame');
+        
+        // Voor submit: button uitschakelen
+        form.addEventListener('submit', function() {
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Uploaden... Even geduld...';
+            statusDiv.className = 'mt-4 text-cyan-400';
+            statusDiv.textContent = 'Bestand wordt geüpload naar Google Drive...';
+            statusDiv.classList.remove('hidden');
         });
         
-        document.getElementById('stemForm').addEventListener('submit', () => {
-            document.getElementById('submitBtn').innerText = "Uploaden...";
-            document.getElementById('submitBtn').disabled = true;
+        // Na upload (iframe load)
+        iframe.addEventListener('load', function() {
+            try {
+                // Probeer response te lezen
+                const responseText = iframe.contentDocument.body.innerText;
+                const result = JSON.parse(responseText);
+                
+                if (result.status === "success") {
+                    statusDiv.className = 'mt-4 text-green-400';
+                    statusDiv.textContent = '✅ Upload gelukt! Je stem staat nu in de lijst.';
+                    form.reset();
+                    setTimeout(loadStems, 1000); // Herlaad lijst
+                } else {
+                    statusDiv.className = 'mt-4 text-red-400';
+                    statusDiv.textContent = '❌ Fout: ' + result.message;
+                }
+            } catch (e) {
+                // Cross-origin of lege response = toch success (iframe trick)
+                statusDiv.className = 'mt-4 text-green-400';
+                statusDiv.textContent = '✅ Upload verwerkt! Lijst wordt vernieuwd...';
+                form.reset();
+                setTimeout(loadStems, 2000);
+            }
+            
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Upload Stem Pack';
         });
         
+        // Start
         loadStems();
     </script>
 </body>
