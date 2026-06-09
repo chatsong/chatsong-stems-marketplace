@@ -5,7 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Stems & Collab Marketplace</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>body { background-color: #0d1117; color: #c9d1d9; font-family: system-ui, sans-serif; }</style>
+    <style>
+        body { background-color: #0d1117; color: #c9d1d9; font-family: system-ui, sans-serif; }
+        .stem-card { transition: all 0.2s; }
+        .stem-card:hover { border-color: #0891b2; }
+    </style>
 </head>
 <body class="p-6 min-h-screen">
     <div class="max-w-4xl mx-auto">
@@ -14,64 +18,25 @@
         <div class="mb-8 text-center">
             <h1 class="text-4xl font-bold text-white mb-2">🎵 Stems & Collab Marketplace</h1>
             <p class="text-gray-400">Offering stems? Looking for a collab? Find it here.</p>
+            <p class="text-gray-500 text-sm mt-2">Powered by <a href="https://community.chatsong.nl" target="_blank" class="text-cyan-400 hover:underline">Chatsong Community</a></p>
         </div>
 
-        <!-- Upload Form -->
-        <div class="bg-gray-900 p-6 rounded-xl border border-gray-800 mb-8">
-            <h2 class="text-xl font-semibold text-white mb-4">📤 Upload je Stem Pack</h2>
+        <!-- Upload via Google Form -->
+        <div class="bg-gray-900 p-6 rounded-xl border border-gray-800 mb-8 text-center">
+            <h2 class="text-xl font-semibold text-white mb-4">📤 Upload je Stem of Plaats een Zoekopdracht</h2>
+            <p class="text-gray-400 mb-4">Vul het formulier in. Bij "Upload method" kies je hoe je je stems deelt.</p>
             
-            <form id="stemForm" 
-                  action="https://script.google.com/macros/s/AKfycbxZqwdOkjXEnMzVQgBtZHkXA2uvaAZTGDwnrJzu6wAXZoNAUIh_Hni-aMShrZUFV6GL/exec" 
-                  method="POST" 
-                  target="uploadFrame"
-                  enctype="multipart/form-data">
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    <input type="text" name="artistName" placeholder="Artist name" required
-                        class="bg-gray-800 p-3 rounded-lg border border-gray-700 text-white placeholder-gray-500 focus:border-cyan-500 focus:outline-none">
-                    <input type="text" name="trackTitle" placeholder="Track title" required
-                        class="bg-gray-800 p-3 rounded-lg border border-gray-700 text-white placeholder-gray-500 focus:border-cyan-500 focus:outline-none">
-                </div>
-                
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                    <select name="role" required
-                        class="bg-gray-800 p-3 rounded-lg border border-gray-700 text-white focus:border-cyan-500 focus:outline-none">
-                        <option value="">I am...</option>
-                        <option value="Vocalist">🎤 Vocalist</option>
-                        <option value="DJ-Producer">🎧 DJ / Producer</option>
-                        <option value="Instrumentalist">🎸 Instrumentalist</option>
-                        <option value="Songwriter">📝 Songwriter</option>
-                    </select>
-                    
-                    <select name="type" required
-                        class="bg-gray-800 p-3 rounded-lg border border-gray-700 text-white focus:border-cyan-500 focus:outline-none">
-                        <option value="">I am...</option>
-                        <option value="Offering stems">📦 Offering stems</option>
-                        <option value="Looking for">🔍 Looking for</option>
-                    </select>
-                    
-                    <input type="text" name="description" placeholder="What I offer / What I need" required
-                        class="bg-gray-800 p-3 rounded-lg border border-gray-700 text-white placeholder-gray-500 focus:border-cyan-500 focus:outline-none">
-                </div>
-                
-                <div class="mb-4">
-                    <input type="file" name="file" accept=".mp3,.wav,.zip" 
-                        class="w-full text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-cyan-700 file:text-white hover:file:bg-cyan-600">
-                    <p class="text-xs text-gray-500 mt-1">Max 25MB. .zip voor meerdere stems. Alleen bij "Offering stems".</p>
-                </div>
-                
-                <button type="submit" id="submitBtn"
-                    class="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-3 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-                    Upload Stem Pack
-                </button>
-            </form>
+            <a href="https://docs.google.com/forms/d/e/1Yas5AW3atGCHPAE8SMbekCT8sYSyE8cTwwPrNR6So4U/viewform" 
+               target="_blank" 
+               class="inline-block bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-3 px-6 rounded-lg transition-colors">
+                ⬆️ Open Formulier
+            </a>
             
-            <iframe name="uploadFrame" id="uploadFrame" style="display:none;"></iframe>
-            <div id="uploadStatus" class="mt-4 hidden"></div>
+            <p class="text-gray-500 text-sm mt-2">Kies "Post a reaction on Chatsong" om direct te reageren!</p>
         </div>
 
         <!-- Filters -->
-        <div class="flex gap-2 mb-4 flex-wrap">
+        <div class="flex gap-2 mb-4 flex-wrap justify-center">
             <button onclick="filter('all')" class="filter-btn active bg-cyan-600 text-white px-4 py-2 rounded-lg text-sm font-bold">ALL</button>
             <button onclick="filter('offering')" class="filter-btn bg-gray-800 text-gray-400 px-4 py-2 rounded-lg text-sm font-bold hover:bg-gray-700">📦 OFFERING</button>
             <button onclick="filter('looking')" class="filter-btn bg-gray-800 text-gray-400 px-4 py-2 rounded-lg text-sm font-bold hover:bg-gray-700">🔍 LOOKING FOR</button>
@@ -79,58 +44,82 @@
 
         <!-- List -->
         <div class="bg-gray-900 p-6 rounded-xl border border-gray-800">
-            <h2 class="text-xl font-semibold text-white mb-4">🔥 Beschikbare Stems & Zoekopdrachten</h2>
+            <h2 class="text-xl font-semibold text-white mb-4">🔥 Available Stems & Collabs</h2>
             <div id="marketplaceList" class="space-y-4">
                 <p class="text-gray-500 italic">Laden...</p>
             </div>
         </div>
 
+        <!-- Footer -->
+        <div class="mt-8 text-center text-gray-500 text-sm">
+            <p>💡 <strong>Wil je reageren?</strong> Ga naar onze <a href="https://community.chatsong.nl" target="_blank" class="text-cyan-400 hover:underline">community</a> en reageer onder de marketplace post!</p>
+        </div>
+
     </div>
 
     <script>
-        const API_URL = "https://script.google.com/macros/s/AKfycbxZqwdOkjXEnMzVQgBtZHkXA2uvaAZTGDwnrJzu6wAXZoNAUIh_Hni-aMShrZUFV6GL/exec";
+        // SPREADSHEET ID - je huidige spreadsheet
+        const SPREADSHEET_ID = "1ZgmPFleXdufT9yk734CEpRNwvdMgP3yo0z3c0KVbOrA";
+        const SHEET_NAME = "Form responses 1";
+        
         let allItems = [];
         
         function loadStems() {
             const list = document.getElementById('marketplaceList');
             
-            const script = document.createElement('script');
-            const cb = 'stems_' + Date.now();
+            // Publieke CSV export - GEEN CORS issues!
+            const csvUrl = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(SHEET_NAME)}`;
             
-            window[cb] = function(data) {
-                delete window[cb];
-                if (script.parentNode) script.parentNode.removeChild(script);
-                
-                if (!data || data.status === "error") {
-                    list.innerHTML = '<p class="text-red-400">Fout: ' + (data?.message || "Onbekend") + '</p>';
-                    return;
+            fetch(csvUrl)
+                .then(r => r.text())
+                .then(csv => {
+                    const rows = parseCSV(csv);
+                    
+                    if (rows.length <= 1) {
+                        list.innerHTML = '<p class="text-gray-500 italic">Nog geen items. Wees de eerste!</p>';
+                        return;
+                    }
+                    
+                    allItems = rows.slice(1).reverse(); // Nieuwste bovenaan
+                    render(allItems);
+                })
+                .catch(err => {
+                    list.innerHTML = '<p class="text-red-400">Kon niet laden. Check of de spreadsheet publiek is.</p>';
+                    console.error(err);
+                });
+        }
+        
+        function parseCSV(csv) {
+            const rows = [];
+            let row = [];
+            let col = '';
+            let inQuotes = false;
+            
+            for (let i = 0; i < csv.length; i++) {
+                const char = csv[i];
+                if (char === '"') {
+                    if (inQuotes && csv[i+1] === '"') {
+                        col += '"';
+                        i++;
+                    } else {
+                        inQuotes = !inQuotes;
+                    }
+                } else if ((char === ',' || char === '\n') && !inQuotes) {
+                    row.push(col.trim());
+                    if (char === '\n') {
+                        rows.push(row);
+                        row = [];
+                    }
+                    col = '';
+                } else {
+                    col += char;
                 }
-                
-                if (!Array.isArray(data) || data.length === 0) {
-                    list.innerHTML = '<p class="text-gray-500 italic">Nog geen items. Wees de eerste!</p>';
-                    return;
-                }
-                
-                // Sla op voor filtering
-                allItems = data.map(item => ({
-                    timestamp: item.Timestamp || "",
-                    artist: item["Artist name"] || item.artistName || "Unknown",
-                    title: item["Track title"] || item.trackTitle || "",
-                    fileUrl: item["upload your stems"] || item.uploadYourStems || "",
-                    role: item["i am"] || item.iAm || item.role || "",
-                    type: item["i am offering/looking"] || item.iAmOfferingLooking || item.type || "",
-                    description: item["What I offer / What I need"] || item.whatIOfferWhatINeed || item.description || ""
-                }));
-                
-                render(allItems);
-            };
-            
-            script.onerror = () => {
-                list.innerHTML = '<p class="text-red-400">Kon niet verbinden met server.</p>';
-            };
-            
-            script.src = API_URL + "?callback=" + cb + "&_=" + Date.now();
-            document.head.appendChild(script);
+            }
+            if (col || row.length) {
+                row.push(col.trim());
+                rows.push(row);
+            }
+            return rows;
         }
         
         function render(items) {
@@ -141,9 +130,30 @@
                 return;
             }
             
-            list.innerHTML = items.map(item => {
-                const date = item.timestamp ? new Date(item.timestamp).toLocaleDateString('nl-NL') : '';
-                const isOffering = item.type.toLowerCase().includes('offering');
+            list.innerHTML = items.map(row => {
+                // Kolommen uit je spreadsheet (nieuwe volgorde):
+                // 0: Timestamp
+                // 1: Artist name
+                // 2: Track title
+                // 3: I am (rol)
+                // 4: I am offering/looking (type)
+                // 5: Description
+                // 6: Upload method (nieuw!)
+                // 7: Link to your stems
+                // 8: My Chatsong username
+                
+                const timestamp = row[0] || "";
+                const artist = row[1] || "Unknown";
+                const title = row[2] || "";
+                const role = row[3] || "";
+                const type = row[4] || "";
+                const description = row[5] || "";
+                const uploadMethod = row[6] || "";
+                const stemLink = row[7] || "";
+                const username = row[8] || "";
+                
+                const isOffering = type.toLowerCase().includes('offering');
+                const isReaction = uploadMethod.toLowerCase().includes('reaction') || uploadMethod.toLowerCase().includes('chatsong');
                 
                 const badgeColor = isOffering ? 'cyan' : 'purple';
                 const badgeText = isOffering ? '📦 OFFERING' : '🔍 LOOKING FOR';
@@ -151,47 +161,65 @@
                 
                 // Role emoji
                 let roleEmoji = '🎵';
-                if (item.role.includes('Vocal')) roleEmoji = '🎤';
-                else if (item.role.includes('DJ') || item.role.includes('Producer')) roleEmoji = '🎧';
-                else if (item.role.includes('Instrument')) roleEmoji = '🎸';
-                else if (item.role.includes('Songwriter')) roleEmoji = '📝';
+                if (role.includes('Vocal')) roleEmoji = '🎤';
+                else if (role.includes('DJ') || role.includes('Producer')) roleEmoji = '🎧';
+                else if (role.includes('Instrument')) roleEmoji = '🎸';
+                else if (role.includes('Songwriter')) roleEmoji = '📝';
                 
-                // Download link maken
+                // Download link maken van Drive URL (als die er is)
                 let downloadUrl = '';
-                if (item.fileUrl && item.fileUrl.includes('drive.google.com')) {
-                    const match = item.fileUrl.match(/id=([a-zA-Z0-9_-]+)/) || 
-                                 item.fileUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
+                if (stemLink && stemLink.includes('drive.google.com')) {
+                    const match = stemLink.match(/id=([a-zA-Z0-9_-]+)/) || 
+                                 stemLink.match(/\/d\/([a-zA-Z0-9_-]+)/);
                     if (match) downloadUrl = `https://drive.google.com/uc?export=download&id=${match[1]}`;
                 }
                 
-                const hasFile = downloadUrl !== '';
+                const hasDirectLink = downloadUrl !== '';
+                const hasAnyLink = stemLink && stemLink.includes('http');
+                
+                const date = timestamp ? new Date(timestamp).toLocaleDateString('nl-NL') : '';
+                
+                // Contact info
+                const contactInfo = username ? `@${username}` : artist;
                 
                 return `
-                    <div class="bg-gray-800 p-4 rounded-lg border ${borderColor} border-l-4">
+                    <div class="stem-card bg-gray-800 p-4 rounded-lg border ${borderColor} border-l-4">
                         <div class="flex items-center gap-2 mb-2">
                             <span class="text-xs bg-${badgeColor}-900 text-${badgeColor}-300 px-2 py-1 rounded font-bold">${badgeText}</span>
-                            <span class="text-xs bg-gray-700 text-gray-300 px-2 py-1 rounded">${roleEmoji} ${item.role}</span>
+                            <span class="text-xs bg-gray-700 text-gray-300 px-2 py-1 rounded">${roleEmoji} ${role}</span>
                             <span class="text-xs text-gray-500">${date}</span>
                         </div>
                         
-                        <h3 class="font-bold text-white text-lg mb-1">${isOffering ? item.title : `${item.artist} is looking for...`}</h3>
-                        <p class="text-gray-300 text-sm mb-3">${item.description}</p>
-                        <p class="text-cyan-400 text-sm mb-3">👤 ${item.artist}</p>
+                        <h3 class="font-bold text-white text-lg mb-1">${isOffering ? title : `${artist} is looking for...`}</h3>
+                        <p class="text-gray-300 text-sm mb-2">${description}</p>
+                        <p class="text-cyan-400 text-sm mb-2">👤 ${artist}</p>
                         
-                        <div class="flex gap-2">
-                            ${isOffering && hasFile ? `
+                        ${username ? `<p class="text-purple-400 text-xs mb-3">💬 Chatsong: ${contactInfo}</p>` : ''}
+                        
+                        ${isReaction ? `
+                            <div class="bg-gray-900 p-3 rounded mb-3">
+                                <p class="text-yellow-400 text-xs font-bold">📢 Reageer op Chatsong</p>
+                                <p class="text-gray-400 text-xs">Deze gebruiker wacht op reacties in de community!</p>
+                            </div>
+                        ` : ''}
+                        
+                        <div class="flex gap-2 flex-wrap">
+                            ${hasDirectLink ? `
                                 <a href="${downloadUrl}" target="_blank" 
-                                   class="bg-cyan-600 hover:bg-cyan-500 text-white px-4 py-2 rounded text-sm font-bold">
-                                    ⬇️ DOWNLOAD STEMS
+                                   class="bg-cyan-600 hover:bg-cyan-500 text-white px-4 py-2 rounded text-sm font-bold transition-colors">
+                                    ⬇️ DOWNLOAD
                                 </a>
-                            ` : isOffering ? `
-                                <span class="text-gray-500 text-sm">Geen bestand</span>
-                            ` : `
-                                <a href="mailto:?subject=Re: ${encodeURIComponent(item.artist)} looking for ${encodeURIComponent(item.description)}&body=Hi ${encodeURIComponent(item.artist)},%0D%0A%0D%0AI saw your post on the Stems Marketplace.%0D%0A%0D%0ACheers" 
-                                   class="bg-purple-600 hover:bg-purple-500 text-white px-4 py-2 rounded text-sm font-bold">
-                                    📧 CONTACT
+                            ` : hasAnyLink ? `
+                                <a href="${stemLink}" target="_blank" 
+                                   class="bg-cyan-600 hover:bg-cyan-500 text-white px-4 py-2 rounded text-sm font-bold transition-colors">
+                                    🔗 EXTERNE LINK
                                 </a>
-                            `}
+                            ` : ''}
+                            
+                            <a href="https://community.chatsong.nl" target="_blank"
+                               class="bg-purple-600 hover:bg-purple-500 text-white px-4 py-2 rounded text-sm font-bold transition-colors">
+                                💬 REAGEER
+                            </a>
                         </div>
                     </div>
                 `;
@@ -207,35 +235,9 @@
             event.target.classList.add('bg-cyan-600', 'text-white');
             
             if (type === 'all') render(allItems);
-            else if (type === 'offering') render(allItems.filter(i => i.type.toLowerCase().includes('offering')));
-            else if (type === 'looking') render(allItems.filter(i => i.type.toLowerCase().includes('looking')));
+            else if (type === 'offering') render(allItems.filter(r => r[4] && r[4].toLowerCase().includes('offering')));
+            else if (type === 'looking') render(allItems.filter(r => r[4] && r[4].toLowerCase().includes('looking')));
         }
-        
-        // Upload handling
-        const form = document.getElementById('stemForm');
-        const submitBtn = document.getElementById('submitBtn');
-        const statusDiv = document.getElementById('uploadStatus');
-        const iframe = document.getElementById('uploadFrame');
-        
-        form.addEventListener('submit', () => {
-            submitBtn.disabled = true;
-            submitBtn.textContent = 'Uploaden...';
-            statusDiv.className = 'mt-4 text-cyan-400';
-            statusDiv.textContent = 'Bezig met upload...';
-            statusDiv.classList.remove('hidden');
-        });
-        
-        iframe.addEventListener('load', () => {
-            setTimeout(() => {
-                statusDiv.className = 'mt-4 text-green-400';
-                statusDiv.textContent = '✅ Upload gelukt! Lijst wordt vernieuwd...';
-                form.reset();
-                loadStems();
-            }, 1000);
-            
-            submitBtn.disabled = false;
-            submitBtn.textContent = 'Upload Stem Pack';
-        });
         
         // Start
         loadStems();
