@@ -5,11 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Stems & Collab Marketplace</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        body { background-color: #0d1117; color: #c9d1d9; font-family: system-ui, sans-serif; }
-        .stem-card { transition: all 0.2s; }
-        .stem-card:hover { border-color: #0891b2; }
-    </style>
+    <style>body { background-color: #0d1117; color: #c9d1d9; font-family: system-ui, sans-serif; }</style>
 </head>
 <body class="p-6 min-h-screen">
     <div class="max-w-4xl mx-auto">
@@ -17,7 +13,7 @@
         <!-- Header -->
         <div class="mb-8 text-center">
             <h1 class="text-4xl font-bold text-white mb-2">🎵 Stems & Collab Marketplace</h1>
-            <p class="text-gray-400">Deel je stems, vocals en beats. Vind collabs.</p>
+            <p class="text-gray-400">Offering stems? Looking for a collab? Find it here.</p>
         </div>
 
         <!-- Upload Form -->
@@ -25,22 +21,43 @@
             <h2 class="text-xl font-semibold text-white mb-4">📤 Upload je Stem Pack</h2>
             
             <form id="stemForm" 
-                  action="https://script.google.com/macros/s/AKfycbylhZOte16hD3a-nlwQ2JQBJl5X2ITW4Dc4xUx4WtfUsoUoLRbciQ5vHyzoi_pxzDXj/exec" 
+                  action="https://script.google.com/macros/s/AKfycbxZqwdOkjXEnMzVQgBtZHkXA2uvaAZTGDwnrJzu6wAXZoNAUIh_Hni-aMShrZUFV6GL/exec" 
                   method="POST" 
                   target="uploadFrame"
                   enctype="multipart/form-data">
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    <input type="text" name="artistName" placeholder="Jouw artiestennaam" required
+                    <input type="text" name="artistName" placeholder="Artist name" required
                         class="bg-gray-800 p-3 rounded-lg border border-gray-700 text-white placeholder-gray-500 focus:border-cyan-500 focus:outline-none">
-                    <input type="text" name="trackTitle" placeholder="Track titel" required
+                    <input type="text" name="trackTitle" placeholder="Track title" required
+                        class="bg-gray-800 p-3 rounded-lg border border-gray-700 text-white placeholder-gray-500 focus:border-cyan-500 focus:outline-none">
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    <select name="role" required
+                        class="bg-gray-800 p-3 rounded-lg border border-gray-700 text-white focus:border-cyan-500 focus:outline-none">
+                        <option value="">I am...</option>
+                        <option value="Vocalist">🎤 Vocalist</option>
+                        <option value="DJ-Producer">🎧 DJ / Producer</option>
+                        <option value="Instrumentalist">🎸 Instrumentalist</option>
+                        <option value="Songwriter">📝 Songwriter</option>
+                    </select>
+                    
+                    <select name="type" required
+                        class="bg-gray-800 p-3 rounded-lg border border-gray-700 text-white focus:border-cyan-500 focus:outline-none">
+                        <option value="">I am...</option>
+                        <option value="Offering stems">📦 Offering stems</option>
+                        <option value="Looking for">🔍 Looking for</option>
+                    </select>
+                    
+                    <input type="text" name="description" placeholder="What I offer / What I need" required
                         class="bg-gray-800 p-3 rounded-lg border border-gray-700 text-white placeholder-gray-500 focus:border-cyan-500 focus:outline-none">
                 </div>
                 
                 <div class="mb-4">
-                    <input type="file" name="file" accept=".mp3,.wav,.zip,.rar" required
+                    <input type="file" name="file" accept=".mp3,.wav,.zip" 
                         class="w-full text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-cyan-700 file:text-white hover:file:bg-cyan-600">
-                    <p class="text-xs text-gray-500 mt-1">Max 25MB. .zip voor meerdere stems.</p>
+                    <p class="text-xs text-gray-500 mt-1">Max 25MB. .zip voor meerdere stems. Alleen bij "Offering stems".</p>
                 </div>
                 
                 <button type="submit" id="submitBtn"
@@ -49,17 +66,21 @@
                 </button>
             </form>
             
-            <!-- Hidden iframe voor form response -->
             <iframe name="uploadFrame" id="uploadFrame" style="display:none;"></iframe>
-            
-            <!-- Upload status -->
             <div id="uploadStatus" class="mt-4 hidden"></div>
         </div>
 
-        <!-- Marketplace Lijst -->
+        <!-- Filters -->
+        <div class="flex gap-2 mb-4 flex-wrap">
+            <button onclick="filter('all')" class="filter-btn active bg-cyan-600 text-white px-4 py-2 rounded-lg text-sm font-bold">ALL</button>
+            <button onclick="filter('offering')" class="filter-btn bg-gray-800 text-gray-400 px-4 py-2 rounded-lg text-sm font-bold hover:bg-gray-700">📦 OFFERING</button>
+            <button onclick="filter('looking')" class="filter-btn bg-gray-800 text-gray-400 px-4 py-2 rounded-lg text-sm font-bold hover:bg-gray-700">🔍 LOOKING FOR</button>
+        </div>
+
+        <!-- List -->
         <div class="bg-gray-900 p-6 rounded-xl border border-gray-800">
-            <h2 class="text-xl font-semibold text-white mb-4">🔥 Beschikbare Stems</h2>
-            <div id="marketplaceList" class="space-y-3">
+            <h2 class="text-xl font-semibold text-white mb-4">🔥 Beschikbare Stems & Zoekopdrachten</h2>
+            <div id="marketplaceList" class="space-y-4">
                 <p class="text-gray-500 italic">Laden...</p>
             </div>
         </div>
@@ -67,121 +88,150 @@
     </div>
 
     <script>
-        // ⚠️ VERVANG DIT MET JE EIGEN APPS SCRIPT URL
-        const API_URL = "https://script.google.com/macros/s/AKfycbylhZOte16hD3a-nlwQ2JQBJl5X2ITW4Dc4xUx4WtfUsoUoLRbciQ5vHyzoi_pxzDXj/exec";
+        const API_URL = "https://script.google.com/macros/s/AKfycbxZqwdOkjXEnMzVQgBtZHkXA2uvaAZTGDwnrJzu6wAXZoNAUIh_Hni-aMShrZUFV6GL/exec";
+        let allItems = [];
         
-        // === LIJST LADEN (JSONP) ===
         function loadStems() {
             const list = document.getElementById('marketplaceList');
-            list.innerHTML = '<p class="text-gray-500 italic">Laden...</p>';
             
-            // JSONP: script tag injectie (geen CORS!)
             const script = document.createElement('script');
-            const cbName = 'stems_' + Date.now();
+            const cb = 'stems_' + Date.now();
             
-            window[cbName] = function(data) {
-                // Cleanup
-                delete window[cbName];
+            window[cb] = function(data) {
+                delete window[cb];
                 if (script.parentNode) script.parentNode.removeChild(script);
                 
-                // Error check
                 if (!data || data.status === "error") {
                     list.innerHTML = '<p class="text-red-400">Fout: ' + (data?.message || "Onbekend") + '</p>';
                     return;
                 }
                 
-                // Lege lijst
                 if (!Array.isArray(data) || data.length === 0) {
-                    list.innerHTML = '<p class="text-gray-500 italic">Nog geen stems geüpload. Wees de eerste!</p>';
+                    list.innerHTML = '<p class="text-gray-500 italic">Nog geen items. Wees de eerste!</p>';
                     return;
                 }
                 
-                // Render stems
-                list.innerHTML = data.map((item, index) => {
-                    // Haal velden op (check verschillende mogelijke namen)
-                    const title = item.Tracktitle || item.trackTitle || item["Track Title"] || "Naamloos";
-                    const artist = item.artistName || item["Artist Name"] || "Onbekend";
-                    const url = item.downloadUrl || item.downloadurl || item["downloadUrl"] || "";
-                    const type = item.stemType || item.stemtype || "Pack";
-                    const looking = item.lookingFor || item.lookingfor || "Collaboration";
-                    
-                    // Check of er een echte download URL is
-                    const hasDownload = url && url.includes("drive.google.com") && url.includes("id=");
-                    
-                    return `
-                        <div class="stem-card bg-gray-800 p-4 rounded-lg border border-gray-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                            <div class="flex-1">
-                                <div class="flex items-center gap-2 mb-1">
-                                    <span class="text-xs bg-cyan-900 text-cyan-300 px-2 py-0.5 rounded">${type}</span>
-                                    <span class="text-xs bg-purple-900 text-purple-300 px-2 py-0.5 rounded">${looking}</span>
-                                </div>
-                                <h3 class="font-bold text-white text-lg">${title}</h3>
-                                <p class="text-cyan-400 text-sm">👤 ${artist}</p>
-                            </div>
-                            
-                            <div class="flex gap-2">
-                                ${hasDownload ? `
-                                    <a href="${url}" target="_blank" 
-                                       class="bg-cyan-600 hover:bg-cyan-500 text-white text-sm px-4 py-2 rounded-lg font-medium transition-colors">
-                                        ⬇️ Download
-                                    </a>
-                                ` : `
-                                    <span class="text-gray-500 text-sm px-4 py-2">Geen bestand</span>
-                                `}
-                            </div>
-                        </div>
-                    `;
-                }).join('');
+                // Sla op voor filtering
+                allItems = data.map(item => ({
+                    timestamp: item.Timestamp || "",
+                    artist: item["Artist name"] || item.artistName || "Unknown",
+                    title: item["Track title"] || item.trackTitle || "",
+                    fileUrl: item["upload your stems"] || item.uploadYourStems || "",
+                    role: item["i am"] || item.iAm || item.role || "",
+                    type: item["i am offering/looking"] || item.iAmOfferingLooking || item.type || "",
+                    description: item["What I offer / What I need"] || item.whatIOfferWhatINeed || item.description || ""
+                }));
+                
+                render(allItems);
             };
             
-            // Error handling
-            script.onerror = function() {
-                list.innerHTML = '<p class="text-red-400">Kon niet verbinden met server. Probeer later opnieuw.</p>';
+            script.onerror = () => {
+                list.innerHTML = '<p class="text-red-400">Kon niet verbinden met server.</p>';
             };
             
-            // Cache-buster toevoegen
-            script.src = API_URL + "?callback=" + cbName + "&_=" + Date.now();
+            script.src = API_URL + "?callback=" + cb + "&_=" + Date.now();
             document.head.appendChild(script);
         }
         
-        // === UPLOAD HANDLING ===
+        function render(items) {
+            const list = document.getElementById('marketplaceList');
+            
+            if (!items.length) {
+                list.innerHTML = '<p class="text-gray-500 italic">Geen items gevonden.</p>';
+                return;
+            }
+            
+            list.innerHTML = items.map(item => {
+                const date = item.timestamp ? new Date(item.timestamp).toLocaleDateString('nl-NL') : '';
+                const isOffering = item.type.toLowerCase().includes('offering');
+                
+                const badgeColor = isOffering ? 'cyan' : 'purple';
+                const badgeText = isOffering ? '📦 OFFERING' : '🔍 LOOKING FOR';
+                const borderColor = isOffering ? 'border-cyan-900' : 'border-purple-900';
+                
+                // Role emoji
+                let roleEmoji = '🎵';
+                if (item.role.includes('Vocal')) roleEmoji = '🎤';
+                else if (item.role.includes('DJ') || item.role.includes('Producer')) roleEmoji = '🎧';
+                else if (item.role.includes('Instrument')) roleEmoji = '🎸';
+                else if (item.role.includes('Songwriter')) roleEmoji = '📝';
+                
+                // Download link maken
+                let downloadUrl = '';
+                if (item.fileUrl && item.fileUrl.includes('drive.google.com')) {
+                    const match = item.fileUrl.match(/id=([a-zA-Z0-9_-]+)/) || 
+                                 item.fileUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
+                    if (match) downloadUrl = `https://drive.google.com/uc?export=download&id=${match[1]}`;
+                }
+                
+                const hasFile = downloadUrl !== '';
+                
+                return `
+                    <div class="bg-gray-800 p-4 rounded-lg border ${borderColor} border-l-4">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="text-xs bg-${badgeColor}-900 text-${badgeColor}-300 px-2 py-1 rounded font-bold">${badgeText}</span>
+                            <span class="text-xs bg-gray-700 text-gray-300 px-2 py-1 rounded">${roleEmoji} ${item.role}</span>
+                            <span class="text-xs text-gray-500">${date}</span>
+                        </div>
+                        
+                        <h3 class="font-bold text-white text-lg mb-1">${isOffering ? item.title : `${item.artist} is looking for...`}</h3>
+                        <p class="text-gray-300 text-sm mb-3">${item.description}</p>
+                        <p class="text-cyan-400 text-sm mb-3">👤 ${item.artist}</p>
+                        
+                        <div class="flex gap-2">
+                            ${isOffering && hasFile ? `
+                                <a href="${downloadUrl}" target="_blank" 
+                                   class="bg-cyan-600 hover:bg-cyan-500 text-white px-4 py-2 rounded text-sm font-bold">
+                                    ⬇️ DOWNLOAD STEMS
+                                </a>
+                            ` : isOffering ? `
+                                <span class="text-gray-500 text-sm">Geen bestand</span>
+                            ` : `
+                                <a href="mailto:?subject=Re: ${encodeURIComponent(item.artist)} looking for ${encodeURIComponent(item.description)}&body=Hi ${encodeURIComponent(item.artist)},%0D%0A%0D%0AI saw your post on the Stems Marketplace.%0D%0A%0D%0ACheers" 
+                                   class="bg-purple-600 hover:bg-purple-500 text-white px-4 py-2 rounded text-sm font-bold">
+                                    📧 CONTACT
+                                </a>
+                            `}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        function filter(type) {
+            document.querySelectorAll('.filter-btn').forEach(b => {
+                b.classList.remove('bg-cyan-600', 'text-white');
+                b.classList.add('bg-gray-800', 'text-gray-400');
+            });
+            event.target.classList.remove('bg-gray-800', 'text-gray-400');
+            event.target.classList.add('bg-cyan-600', 'text-white');
+            
+            if (type === 'all') render(allItems);
+            else if (type === 'offering') render(allItems.filter(i => i.type.toLowerCase().includes('offering')));
+            else if (type === 'looking') render(allItems.filter(i => i.type.toLowerCase().includes('looking')));
+        }
+        
+        // Upload handling
         const form = document.getElementById('stemForm');
         const submitBtn = document.getElementById('submitBtn');
         const statusDiv = document.getElementById('uploadStatus');
         const iframe = document.getElementById('uploadFrame');
         
-        // Voor submit: button uitschakelen
-        form.addEventListener('submit', function() {
+        form.addEventListener('submit', () => {
             submitBtn.disabled = true;
-            submitBtn.textContent = 'Uploaden... Even geduld...';
+            submitBtn.textContent = 'Uploaden...';
             statusDiv.className = 'mt-4 text-cyan-400';
-            statusDiv.textContent = 'Bestand wordt geüpload naar Google Drive...';
+            statusDiv.textContent = 'Bezig met upload...';
             statusDiv.classList.remove('hidden');
         });
         
-        // Na upload (iframe load)
-        iframe.addEventListener('load', function() {
-            try {
-                // Probeer response te lezen
-                const responseText = iframe.contentDocument.body.innerText;
-                const result = JSON.parse(responseText);
-                
-                if (result.status === "success") {
-                    statusDiv.className = 'mt-4 text-green-400';
-                    statusDiv.textContent = '✅ Upload gelukt! Je stem staat nu in de lijst.';
-                    form.reset();
-                    setTimeout(loadStems, 1000); // Herlaad lijst
-                } else {
-                    statusDiv.className = 'mt-4 text-red-400';
-                    statusDiv.textContent = '❌ Fout: ' + result.message;
-                }
-            } catch (e) {
-                // Cross-origin of lege response = toch success (iframe trick)
+        iframe.addEventListener('load', () => {
+            setTimeout(() => {
                 statusDiv.className = 'mt-4 text-green-400';
-                statusDiv.textContent = '✅ Upload verwerkt! Lijst wordt vernieuwd...';
+                statusDiv.textContent = '✅ Upload gelukt! Lijst wordt vernieuwd...';
                 form.reset();
-                setTimeout(loadStems, 2000);
-            }
+                loadStems();
+            }, 1000);
             
             submitBtn.disabled = false;
             submitBtn.textContent = 'Upload Stem Pack';
@@ -189,6 +239,7 @@
         
         // Start
         loadStems();
+        setInterval(loadStems, 30000);
     </script>
 </body>
 </html>
